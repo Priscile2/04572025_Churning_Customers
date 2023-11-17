@@ -69,18 +69,7 @@ if st.button("Predict Churn"):
     }
     cat_data['PaymentMethod'] = cat_data['PaymentMethod'].map(payment_method_mapping)
 
-    #print(input_data)
-
-
-   
-    
-
-
-    print("\n categorical------")
-    for i in cat_data:
-        print(i)
-    
-    from sklearn.preprocessing import StandardScaler
+ 
     
     with open('scaler.pkl', 'rb') as scale:
         scaler = pickle.load(scale)
