@@ -1,10 +1,9 @@
 import streamlit as st
-import joblib
 import pandas as pd
 import keras
 import tensorflow as tf
 from tensorflow.keras.models import load_model
-
+import pickle
 # Load the saved model
 loaded_model = load_model('best_model.pkl')
 
@@ -22,25 +21,71 @@ streaming_movies = st.radio("Streaming Movies", ["No", "Yes", "No Internet Servi
 contract = st.radio("Contract", ["Month-to-Month", "One Year", "Two Year"])
 payment_method = st.selectbox("Payment Method", ["Electronic Check", "Mailed Check", "Bank Transfer (automatic)", "Credit Card (automatic)"])
 
+input_data = {
+    'tenure': tenure,
+    'MonthlyCharges': monthly_charges,
+    'TotalCharges': total_charges,
+    'OnlineSecurity': online_security,
+    'DeviceProtection': device_protection,
+    'TechSupport': tech_support,
+    'StreamingTV': streaming_tv,
+    'StreamingMovies': streaming_movies,
+    'Contract': contract,
+    'PaymentMethod':payment_method,
+}
+
 # Button for making predictions
 if st.button("Predict Churn"):
     # Prepare the input data for prediction
-    input_data = [[tenure, monthly_charges, total_charges, online_security, device_protection, tech_support, streaming_tv, streaming_movies, contract, payment_method]]
+    #input_data = [[tenure, monthly_charges, total_charges, online_security, device_protection, tech_support, streaming_tv, streaming_movies, contract, payment_method]]
 
-    input_data = pd.DataFrame(input_data)
+    input_data = pd.DataFrame(input_data, index=[0])
     
+
     num_data= input_data.select_dtypes(include=['int64','float64'])
     cat_data=input_data.select_dtypes(exclude=['int64','float64'])
     
-    names = list(cat_data.columns.values)
+    print()
+    # Mapping categorical values to numerical
+    online_security_mapping = {'No': 0, 'Yes': 1, 'No Internet Service': 2}
+    cat_data['OnlineSecurity'] = cat_data['OnlineSecurity'].map(online_security_mapping)
 
-    for column in names:
-        cat_data[column], _ = pd.factorize(cat_data[column])
+    device_protection_mapping = {'No': 0, 'Yes': 1, 'No Internet Service': 2}
+    cat_data['DeviceProtection'] = cat_data['DeviceProtection'].map(device_protection_mapping)
 
+    tech_support_mapping = {'No': 0, 'Yes': 1, 'No Internet Service': 2}
+    cat_data['TechSupport'] = cat_data['TechSupport'].map(tech_support_mapping)
+
+    streaming_tv_mapping = {'No': 0, 'Yes': 1, 'No Internet Service': 2}
+    cat_data['StreamingTV'] = cat_data['StreamingTV'].map(streaming_tv_mapping) 
+    streaming_movies_mapping = {'No': 0, 'Yes': 1, 'No Internet Service': 2}
+    cat_data['StreamingMovies'] = cat_data['StreamingMovies'].map(streaming_movies_mapping)
+
+    contract_mapping = {'Month-to-Month': 0, 'One Year': 1, 'Two Year': 2}
+    cat_data['Contract'] = cat_data['Contract'].map(contract_mapping)
+
+    payment_method_mapping = {
+        'Electronic Check': 0, 'Mailed Check': 1, 'Bank Transfer (automatic)': 2, 'Credit Card (automatic)': 3
+    }
+    cat_data['PaymentMethod'] = cat_data['PaymentMethod'].map(payment_method_mapping)
+
+    #print(input_data)
+
+
+   
+    
+
+
+    print("\n categorical------")
+    for i in cat_data:
+        print(i)
+    
     from sklearn.preprocessing import StandardScaler
+    
+    with open('scaler.pkl', 'rb') as scale:
+        scaler = pickle.load(scale)
 
-    scale = StandardScaler()
-    x_scale = scale.fit_transform(num_data)
+    x_scale = scaler.transform(num_data)
 
 
     # Assuming 'X_scaled' is your scaled NumPy array and 'X' is your original DataFrame
